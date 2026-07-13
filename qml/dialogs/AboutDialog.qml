@@ -18,7 +18,7 @@ GlassDialog {
     }
     Text {
         Layout.alignment: Qt.AlignHCenter
-        text: "ncradio"
+        text: Qt.application.name
         font.family: Theme.fontBrand
         font.weight: Font.Bold
         font.pointSize: 18
@@ -26,7 +26,7 @@ GlassDialog {
     }
     Controls.Label {
         Layout.alignment: Qt.AlignHCenter
-        text: "v0.1 (GUI) · config-compatible with ncradio 1.2"
+        text: "v" + Qt.application.version + " · config-compatible with ncradio 1.2"
         color: Theme.textSecondary
     }
 

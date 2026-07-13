@@ -7,7 +7,7 @@ import "pages"
 
 Kirigami.ApplicationWindow {
     id: root
-    title: "ncradio"
+    title: Qt.application.name + " v" + Qt.application.version
     // Smallest default size that keeps the layout intact: height sized so
     // ~8 station rows are fully visible in the sidebar without scrolling.
     width: 1040

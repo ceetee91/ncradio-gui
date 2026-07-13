@@ -9,13 +9,35 @@ GlassDialog {
     dialogWidth: 460
 
     onOpened: {
-        field.text = "";
+        field.text = defaultFilename();
         field.forceActiveFocus();
+        field.selectAll();
     }
 
     function commit() {
         if (recorder.start(field.text))
             dialog.close();
+    }
+
+    function stripInvalid(name) {
+        return name.replace(/[\/\\:*?"<>|]+/g, "").trim();
+    }
+
+    function defaultFilename() {
+        var stationName = "";
+        var presetIdx = configStore.findPreset(radio.frequencyMhz);
+        if (presetIdx >= 0)
+            stationName = stripInvalid(configStore.presetName(presetIdx));
+        if (stationName.length === 0 && radio.rdsStationName.length > 0)
+            stationName = stripInvalid(radio.rdsStationName);
+        if (stationName.length === 0)
+            stationName = radio.frequencyMhz.toFixed(2);
+
+        function pad(n) { return String(n).padStart(2, "0"); }
+        var now = new Date();
+        var dateStr = now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate());
+        var timeStr = pad(now.getHours()) + "-" + pad(now.getMinutes()) + "-" + pad(now.getSeconds());
+        return stationName + "_" + dateStr + "_" + timeStr;
     }
 
     Controls.Label { text: "FILENAME"; font.pointSize: 8; font.bold: true; color: Theme.textTertiary }

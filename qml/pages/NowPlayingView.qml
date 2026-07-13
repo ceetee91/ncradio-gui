@@ -39,7 +39,7 @@ Item {
 
                 AppIcon { name: "signal"; width: 22; height: 22; color: Theme.cyan }
                 Text {
-                    text: "ncradio"
+                    text: Qt.application.name
                     color: Theme.textPrimary
                     font.family: Theme.fontBrand
                     font.weight: Font.Bold
@@ -115,6 +115,7 @@ Item {
                         clip: true
                         spacing: 2
                         model: presetModel
+                        Component.onCompleted: currentIndex = configStore.findPreset(radio.frequencyMhz)
 
                         delegate: StationListItem {
                             width: presetList.width

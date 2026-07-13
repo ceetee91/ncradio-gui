@@ -90,8 +90,8 @@ Item {
 
                 Controls.ComboBox {
                     Kirigami.FormData.label: "Scan step:"
-                    model: ["0.025 MHz", "0.05 MHz", "0.10 MHz", "0.20 MHz"]
-                    readonly property var values: [0.025, 0.05, 0.10, 0.20]
+                    model: ["0.05 MHz", "0.10 MHz", "0.20 MHz"]
+                    readonly property var values: [0.05, 0.10, 0.20]
                     Component.onCompleted: currentIndex = values.indexOf(Math.round(configStore.scanStepMhz * 1000) / 1000)
                     onActivated: configStore.scanStepMhz = values[currentIndex]
                 }
