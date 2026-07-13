@@ -69,6 +69,10 @@ GlassPanel {
             cellWidth: width / 2
             cellHeight: 48
             model: radio.foundStations
+            // Keep the most recently found station in view as the scan
+            // progresses down the band, instead of leaving the list
+            // scrolled at whatever position it happened to be at.
+            onCountChanged: positionViewAtEnd()
 
             delegate: Item {
                 width: foundGrid.cellWidth
@@ -82,6 +86,7 @@ GlassPanel {
                     freqLabel: modelData.freqMhz.toFixed(2)
                     name: modelData.name
                     selected: index === radio.foundStations.length - 1
+                    showActions: false
                 }
             }
         }

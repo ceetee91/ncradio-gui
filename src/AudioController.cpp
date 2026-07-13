@@ -150,6 +150,17 @@ void AudioController::applyFromConfig(const QString &radioDevicePath)
     emit runningChanged();
 }
 
+void AudioController::pauseStream()
+{
+    audio_stop(&m_audio);
+    emit runningChanged();
+}
+
+void AudioController::resumeStream()
+{
+    restart();
+}
+
 void AudioController::restart()
 {
     const Config &cfg = m_configStore->data();

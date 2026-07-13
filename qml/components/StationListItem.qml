@@ -8,6 +8,7 @@ Rectangle {
     property string name: ""
     property bool tuned: false
     property bool selected: false
+    property bool showActions: true
     signal clicked()
     signal editRequested()
     signal deleteRequested()
@@ -56,7 +57,7 @@ Rectangle {
 
     Row {
         id: actions
-        visible: root.selected
+        visible: root.selected && root.showActions
         anchors.right: parent.right
         anchors.rightMargin: 4
         anchors.verticalCenter: parent.verticalCenter

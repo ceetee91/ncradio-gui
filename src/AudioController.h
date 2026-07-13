@@ -66,6 +66,13 @@ public:
     Q_INVOKABLE void applyFromConfig(const QString &radioDevicePath);
     Q_INVOKABLE void refreshDevices();
 
+    // Transient stop/restart for the "mute while scanning/seeking" settings
+    // — mirrors ncradio.c's audio_stop()/audio_apply() calls around scan and
+    // seek. Unlike setEnabled(false), these don't touch the persisted
+    // audio_enabled config value.
+    Q_INVOKABLE void pauseStream();
+    Q_INVOKABLE void resumeStream();
+
 signals:
     void enabledChanged();
     void runningChanged();

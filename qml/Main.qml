@@ -39,6 +39,24 @@ Kirigami.ApplicationWindow {
         layer.effect: MultiEffect { blurEnabled: true; blur: 1.0; blurMax: 96 }
     }
 
+    // Mirrors ncradio.c: pause the audio pipe while scanning/seeking if the
+    // corresponding "mute while..." setting is on, and resume it once done.
+    Connections {
+        target: radio
+        function onScanningChanged() {
+            if (!configStore.audioMuteScan)
+                return;
+            if (radio.scanning) audio.pauseStream();
+            else audio.resumeStream();
+        }
+        function onSeekingChanged() {
+            if (!configStore.audioMuteSeek)
+                return;
+            if (radio.seeking) audio.pauseStream();
+            else audio.resumeStream();
+        }
+    }
+
     Controls.StackView {
         id: stackView
         anchors.fill: parent
