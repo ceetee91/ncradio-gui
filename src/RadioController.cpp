@@ -221,13 +221,13 @@ void RadioController::startScan()
 void RadioController::stopScanAndSave()
 {
     m_scanDiscard = false;
-    radio_stop_scan(&m_radio);
+    finishScan();
 }
 
 void RadioController::stopScanAndDiscard()
 {
     m_scanDiscard = true;
-    radio_stop_scan(&m_radio);
+    finishScan();
 }
 
 void RadioController::finishScan()
