@@ -22,6 +22,45 @@ Item {
         return freqMhz + (name.length > 0 ? " · " + name : "");
     }
 
+    // Model indices currently matching the sidebar search filter, in the
+    // same order the (mostly hidden-when-filtered) delegate list places
+    // them — mirrors StationListItem's own "visible" predicate below.
+    function visiblePresetIndices() {
+        const q = searchField.text;
+        const ql = q.toLowerCase();
+        const result = [];
+        for (let i = 0; i < configStore.presetCount; ++i) {
+            if (q.length === 0
+                || configStore.presetName(i).toLowerCase().includes(ql)
+                || (configStore.presetFreqHz(i) / 1000000.0).toFixed(2).includes(q)) {
+                result.push(i);
+            }
+        }
+        return result;
+    }
+
+    // Moves the sidebar selection by `delta` steps within the currently
+    // *visible* (filtered) presets only, instead of raw model indices —
+    // otherwise Up/Down/PgUp/PgDn would silently walk through rows hidden
+    // by the search filter.
+    function navigatePreset(delta) {
+        const idxs = root.visiblePresetIndices();
+        if (idxs.length === 0)
+            return;
+        let pos = idxs.indexOf(presetList.currentIndex);
+        if (pos < 0)
+            pos = delta > 0 ? -1 : idxs.length;
+        pos = Math.max(0, Math.min(idxs.length - 1, pos + delta));
+        presetList.currentIndex = idxs[pos];
+    }
+
+    function requestAddPreset() {
+        if (configStore.findPreset(radio.frequencyMhz) >= 0)
+            duplicatePresetAlert.open();
+        else
+            manualAddDialog.open();
+    }
+
     // ---------------- Keyboard shortcuts (mirrors ncradio.c's M_NORMAL
     // key bindings) — disabled while typing in a text field, while this
     // page isn't the one on top of the StackView, or (for tuning actions)
@@ -40,7 +79,7 @@ Item {
     Shortcut { sequence: "-"; enabled: root.pageActive && !root.typing; onActivated: radio.volume = Math.max(0, radio.volume - 5) }
     Shortcut { sequence: "_"; enabled: root.pageActive && !root.typing; onActivated: radio.volume = Math.max(0, radio.volume - 5) }
     Shortcut { sequence: "M"; enabled: root.pageActive && !root.typing; onActivated: radio.muted = !radio.muted }
-    Shortcut { sequence: "A"; enabled: root.pageActive && !root.typing && !radio.scanning; onActivated: manualAddDialog.open() }
+    Shortcut { sequence: "A"; enabled: root.pageActive && !root.typing && !radio.scanning; onActivated: root.requestAddPreset() }
     Shortcut {
         sequence: "D"
         enabled: root.pageActive && !root.typing && root.presetSelected
@@ -56,8 +95,8 @@ Item {
         enabled: root.pageActive && !root.typing && root.presetSelected
         onActivated: { renamePresetDialog.presetIndex = presetList.currentIndex; renamePresetDialog.open(); }
     }
-    Shortcut { sequence: "Up"; enabled: root.pageActive && !root.typing; onActivated: presetList.decrementCurrentIndex() }
-    Shortcut { sequence: "Down"; enabled: root.pageActive && !root.typing; onActivated: presetList.incrementCurrentIndex() }
+    Shortcut { sequence: "Up"; enabled: root.pageActive && !root.typing; onActivated: root.navigatePreset(-1) }
+    Shortcut { sequence: "Down"; enabled: root.pageActive && !root.typing; onActivated: root.navigatePreset(1) }
     Shortcut {
         sequence: "Return"
         enabled: root.pageActive && !root.typing && root.presetSelected
@@ -71,18 +110,12 @@ Item {
     Shortcut {
         sequence: "PgUp"
         enabled: root.pageActive && !root.typing && configStore.presetCount > 0
-        onActivated: {
-            const page = Math.max(1, Math.floor(presetList.height / 46) - 1);
-            presetList.currentIndex = Math.max(0, presetList.currentIndex - page);
-        }
+        onActivated: root.navigatePreset(-Math.max(1, Math.floor(presetList.height / 46) - 1))
     }
     Shortcut {
         sequence: "PgDown"
         enabled: root.pageActive && !root.typing && configStore.presetCount > 0
-        onActivated: {
-            const page = Math.max(1, Math.floor(presetList.height / 46) - 1);
-            presetList.currentIndex = Math.min(configStore.presetCount - 1, presetList.currentIndex + page);
-        }
+        onActivated: root.navigatePreset(Math.max(1, Math.floor(presetList.height / 46) - 1))
     }
     Shortcut { sequence: "Q"; enabled: root.pageActive && !root.typing; onActivated: Qt.quit() }
     Shortcut { sequence: "Escape"; enabled: root.pageActive && radio.scanning; onActivated: radio.stopScanAndDiscard() }
@@ -176,8 +209,9 @@ Item {
                             // field focused") work again immediately,
                             // without having to click elsewhere first.
                             Keys.onEscapePressed: root.forceActiveFocus()
+                            onAccepted: root.forceActiveFocus()
                         }
-                        IconButton { icon: "plus"; tooltipText: "Add current frequency as preset"; onClicked: manualAddDialog.open() }
+                        IconButton { icon: "plus"; tooltipText: "Add current frequency as preset"; onClicked: root.requestAddPreset() }
                     }
 
                     Text {
@@ -394,4 +428,9 @@ Item {
     }
     RecordFilenameDialog { id: recordDialog }
     AboutDialog { id: aboutDialog }
+    AlertDialog {
+        id: duplicatePresetAlert
+        dialogTitle: "Already Added"
+        message: "Station is already in the preset list."
+    }
 }
