@@ -233,6 +233,11 @@ void RadioController::stopScanAndDiscard()
 void RadioController::finishScan()
 {
     radio_stop_scan(&m_radio);
+    // The scan thread sweeps the tuner hardware directly via ioctl without
+    // touching m_radio.freq_hz, so it's still holding whatever station the
+    // user was on before the scan started — mirrors ncradio.c's
+    // finish_scan()/cancel_scan(), which both re-tune for the same reason.
+    radio_set_freq(&m_radio, m_radio.freq_hz);
 
     pthread_mutex_lock(&m_radio.mutex);
     refreshFoundStationsLocked();
