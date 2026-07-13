@@ -140,8 +140,8 @@ Item {
                 }
                 Controls.ComboBox {
                     Kirigami.FormData.label: "Buffer size:"
-                    model: ["512 frames", "1024 frames", "2048 frames", "4096 frames", "8192 frames"]
-                    readonly property var values: [512, 1024, 2048, 4096, 8192]
+                    readonly property var values: audio.bufferSizeOptions
+                    model: values.map(v => audio.bufferSizeLabel(v))
                     Component.onCompleted: currentIndex = values.indexOf(audio.bufferFrames)
                     onActivated: audio.bufferFrames = values[currentIndex]
                 }

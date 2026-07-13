@@ -24,6 +24,7 @@ class AudioController : public QObject
     Q_PROPERTY(QVariantList captureDevices READ captureDevices NOTIFY devicesEnumerated)
     Q_PROPERTY(QVariantList playbackDevices READ playbackDevices NOTIFY devicesEnumerated)
     Q_PROPERTY(int bufferFrames READ bufferFrames WRITE setBufferFrames NOTIFY bufferFramesChanged)
+    Q_PROPERTY(QVariantList bufferSizeOptions READ bufferSizeOptions CONSTANT)
     Q_PROPERTY(QString backendVersion READ backendVersion CONSTANT)
     Q_PROPERTY(QString deviceAutodetectMethod READ deviceAutodetectMethod CONSTANT)
 
@@ -51,6 +52,12 @@ public:
 
     int bufferFrames() const;
     void setBufferFrames(int frames);
+    // Mirrors ncradio.c's SETTING_AUDIO_BUFFER handling: the valid buffer
+    // sizes (and what the number means — ALSA period frames vs PipeWire
+    // ring-buffer KB) differ by backend, matching config.c's own
+    // HAVE_PIPEWIRE-conditional validation of audio_buffer_frames.
+    QVariantList bufferSizeOptions() const;
+    Q_INVOKABLE QString bufferSizeLabel(int frames) const;
 
     QString backendVersion() const;
     QString deviceAutodetectMethod() const {

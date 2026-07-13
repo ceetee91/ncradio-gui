@@ -85,6 +85,26 @@ void AudioController::setBufferFrames(int frames)
     restart();
 }
 
+QVariantList AudioController::bufferSizeOptions() const
+{
+#ifdef HAVE_PIPEWIRE
+    return {128, 256, 512, 1024, 2048};
+#else
+    return {512, 1024, 2048, 4096, 8192};
+#endif
+}
+
+QString AudioController::bufferSizeLabel(int frames) const
+{
+#ifdef HAVE_PIPEWIRE
+    if (frames >= 1024 && frames % 1024 == 0)
+        return QStringLiteral("%1 MB").arg(frames / 1024);
+    return QStringLiteral("%1 KB").arg(frames);
+#else
+    return QStringLiteral("%1 frames").arg(frames);
+#endif
+}
+
 QString AudioController::backendVersion() const
 {
 #ifdef HAVE_PIPEWIRE
