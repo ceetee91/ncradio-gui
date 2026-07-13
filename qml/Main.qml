@@ -22,6 +22,18 @@ Kirigami.ApplicationWindow {
         z: -10
     }
 
+    // Clicking anywhere that isn't itself an interactive control (e.g. the
+    // background behind the sidebar's search field) drops focus back to a
+    // plain, non-text item — otherwise a TextField keeps active focus
+    // indefinitely once clicked into, permanently disabling every keyboard
+    // shortcut (which all check for a focused text field) even after the
+    // user has clicked elsewhere.
+    MouseArea {
+        anchors.fill: parent
+        z: -9
+        onClicked: forceActiveFocus()
+    }
+
     // ambient glow blobs (shared background across all pages) — real blur,
     // so translucent glass panels have soft light to visibly catch.
     Rectangle {

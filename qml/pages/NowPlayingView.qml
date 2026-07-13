@@ -85,6 +85,7 @@ Item {
         }
     }
     Shortcut { sequence: "Q"; enabled: root.pageActive && !root.typing; onActivated: Qt.quit() }
+    Shortcut { sequence: "Escape"; enabled: root.pageActive && radio.scanning; onActivated: radio.stopScanAndDiscard() }
 
     ColumnLayout {
         anchors.fill: parent
