@@ -13,11 +13,12 @@ GlassDialog {
 
     onOpened: {
         if (addMode) {
-            field.text = "";
+            field.text = radio.rdsStationName.length > 0 ? radio.rdsStationName : "";
         } else if (presetIndex >= 0) {
             field.text = configStore.presetName(presetIndex);
         }
         field.forceActiveFocus();
+        field.selectAll();
     }
 
     function commit() {
