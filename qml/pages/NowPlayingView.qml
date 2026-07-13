@@ -171,6 +171,11 @@ Item {
                             id: searchField
                             Layout.fillWidth: true
                             placeholderText: "Search stations…"
+                            // Give focus back to a non-text item so the
+                            // keyboard shortcuts (all guarded on "no text
+                            // field focused") work again immediately,
+                            // without having to click elsewhere first.
+                            Keys.onEscapePressed: root.forceActiveFocus()
                         }
                         IconButton { icon: "plus"; tooltipText: "Add current frequency as preset"; onClicked: manualAddDialog.open() }
                     }

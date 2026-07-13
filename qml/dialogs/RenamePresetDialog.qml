@@ -22,8 +22,16 @@ GlassDialog {
     }
 
     function commit() {
-        if (addMode) configStore.addPreset(radio.frequencyMhz, field.text);
-        else if (presetIndex >= 0) configStore.renamePreset(presetIndex, field.text);
+        if (addMode) {
+            if (configStore.findPreset(radio.frequencyMhz) >= 0) {
+                dialog.close();
+                duplicateAlert.open();
+                return;
+            }
+            configStore.addPreset(radio.frequencyMhz, field.text);
+        } else if (presetIndex >= 0) {
+            configStore.renamePreset(presetIndex, field.text);
+        }
         dialog.close();
     }
 
@@ -54,4 +62,10 @@ GlassDialog {
         AccentButton { text: "Cancel"; variant: "ghost"; onClicked: dialog.close() },
         AccentButton { text: addMode ? "Add" : "Save"; variant: "primary"; onClicked: dialog.commit() }
     ]
+
+    AlertDialog {
+        id: duplicateAlert
+        dialogTitle: "Already Added"
+        message: "Station is already in the preset list."
+    }
 }
