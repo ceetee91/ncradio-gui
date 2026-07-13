@@ -61,6 +61,13 @@ Item {
             manualAddDialog.open();
     }
 
+    function requestRecord() {
+        if (recorder.skipFilenamePrompt)
+            recorder.start(recorder.fullPath(recordDialog.defaultFilename()));
+        else
+            recordDialog.open();
+    }
+
     // ---------------- Keyboard shortcuts (mirrors ncradio.c's M_NORMAL
     // key bindings) — disabled while typing in a text field, while this
     // page isn't the one on top of the StackView, or (for tuning actions)
@@ -73,7 +80,7 @@ Item {
     Shortcut { sequence: "T"; enabled: root.navGuard; onActivated: manualTuneDialog.open() }
     Shortcut { sequence: "O"; enabled: root.pageActive && !root.typing; onActivated: root.settingsRequested() }
     Shortcut { sequence: "Shift+E"; enabled: root.pageActive && !root.typing; onActivated: root.equalizerRequested() }
-    Shortcut { sequence: "R"; enabled: root.pageActive && !root.typing && audio.running; onActivated: recordDialog.open() }
+    Shortcut { sequence: "R"; enabled: root.pageActive && !root.typing && audio.running; onActivated: root.requestRecord() }
     Shortcut { sequence: "+"; enabled: root.pageActive && !root.typing; onActivated: radio.volume = Math.min(100, radio.volume + 5) }
     Shortcut { sequence: "="; enabled: root.pageActive && !root.typing; onActivated: radio.volume = Math.min(100, radio.volume + 5) }
     Shortcut { sequence: "-"; enabled: root.pageActive && !root.typing; onActivated: radio.volume = Math.max(0, radio.volume - 5) }
@@ -422,7 +429,7 @@ Item {
                                 icon: "record"
                                 variant: "danger"
                                 enabled: audio.running || recorder.recording
-                                onClicked: recorder.recording ? recorder.stop() : recordDialog.open()
+                                onClicked: recorder.recording ? recorder.stop() : root.requestRecord()
                             }
                         }
                     }

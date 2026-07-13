@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls as Controls
+import QtQuick.Dialogs as Dialogs
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../components"
@@ -182,6 +183,28 @@ Item {
 
                 Item { id: recordingSection; Kirigami.FormData.isSection: true; Kirigami.FormData.label: "Recording" }
 
+                RowLayout {
+                    Kirigami.FormData.label: "Destination folder:"
+                    Layout.fillWidth: true
+                    spacing: 8
+                    Controls.TextField {
+                        id: destinationField
+                        Layout.fillWidth: true
+                        font.family: Theme.fontMono
+                        Component.onCompleted: text = recorder.destinationFolder
+                        onEditingFinished: recorder.destinationFolder = text
+                    }
+                    AccentButton {
+                        text: "Browse…"
+                        variant: "secondary"
+                        onClicked: folderDialog.open()
+                    }
+                }
+                Controls.Switch {
+                    Kirigami.FormData.label: "Don't ask for filename:"
+                    checked: recorder.skipFilenamePrompt
+                    onToggled: recorder.skipFilenamePrompt = checked
+                }
                 Controls.ComboBox {
                     Kirigami.FormData.label: "Record format:"
                     model: recorder.availableFormatNames
@@ -251,6 +274,15 @@ Item {
 
                 Item { Kirigami.FormData.isSection: false; height: 32 }
             }
+        }
+    }
+
+    Dialogs.FolderDialog {
+        id: folderDialog
+        currentFolder: Qt.resolvedUrl("file://" + recorder.destinationFolder)
+        onAccepted: {
+            recorder.setDestinationFolderFromUrl(selectedFolder);
+            destinationField.text = recorder.destinationFolder;
         }
     }
 }

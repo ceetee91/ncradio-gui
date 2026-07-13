@@ -15,7 +15,7 @@ GlassDialog {
     }
 
     function commit() {
-        if (recorder.start(field.text))
+        if (recorder.start(recorder.fullPath(field.text)))
             dialog.close();
     }
 
@@ -80,6 +80,17 @@ GlassDialog {
             text: formatDetailLabel()
             font.family: Theme.fontMono
             color: Theme.cyan
+        }
+    }
+    RowLayout {
+        Layout.fillWidth: true
+        Controls.Label { text: "Location"; color: Theme.textSecondary; Layout.fillWidth: true }
+        Controls.Label {
+            text: recorder.destinationFolder
+            font.family: Theme.fontMono
+            color: Theme.textTertiary
+            elide: Text.ElideMiddle
+            Layout.maximumWidth: 260
         }
     }
 

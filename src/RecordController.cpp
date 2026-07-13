@@ -2,10 +2,15 @@
 #include "ConfigStore.h"
 #include "AudioController.h"
 
+#include <QDir>
+#include <QFileInfo>
+#include <QStandardPaths>
+
 RecordController::RecordController(ConfigStore *configStore, AudioController *audioController, QObject *parent)
     : QObject(parent)
     , m_configStore(configStore)
     , m_audioController(audioController)
+    , m_settings(QStringLiteral("ncradio"), QStringLiteral("ncradio-gui"))
 {
     m_elapsedTimer.setInterval(1000);
     connect(&m_elapsedTimer, &QTimer::timeout, this, [this] {
@@ -145,6 +150,48 @@ QString RecordController::qualityLabel() const
     }
 }
 
+QString RecordController::destinationFolder() const
+{
+    QString dir = m_settings.value(QStringLiteral("Recording/destinationFolder")).toString();
+    if (dir.isEmpty()) {
+        dir = QStandardPaths::writableLocation(QStandardPaths::MusicLocation);
+        if (dir.isEmpty())
+            dir = QDir::homePath();
+    }
+    return dir;
+}
+
+void RecordController::setDestinationFolder(const QString &path)
+{
+    if (path == destinationFolder())
+        return;
+    m_settings.setValue(QStringLiteral("Recording/destinationFolder"), path);
+    emit settingsChanged();
+}
+
+void RecordController::setDestinationFolderFromUrl(const QUrl &url)
+{
+    setDestinationFolder(url.toLocalFile());
+}
+
+bool RecordController::skipFilenamePrompt() const
+{
+    return m_settings.value(QStringLiteral("Recording/skipFilenamePrompt"), false).toBool();
+}
+
+void RecordController::setSkipFilenamePrompt(bool on)
+{
+    if (on == skipFilenamePrompt())
+        return;
+    m_settings.setValue(QStringLiteral("Recording/skipFilenamePrompt"), on);
+    emit settingsChanged();
+}
+
+QString RecordController::fullPath(const QString &name) const
+{
+    return QDir(destinationFolder()).filePath(name);
+}
+
 void RecordController::recordFeedTrampoline(void *ctx, const short *pcm, int frames, int /*channels*/)
 {
     record_feed(static_cast<Record *>(ctx), pcm, frames);
@@ -165,6 +212,8 @@ bool RecordController::start(const QString &pathWithoutExt)
     const QString ext = formatExtension(); // already includes the leading dot (record_extension())
     if (!path.endsWith(ext, Qt::CaseInsensitive))
         path += ext;
+
+    QDir().mkpath(QFileInfo(path).absolutePath());
 
     char errbuf[256] = {0};
     Record *r = record_open(fmt, path.toUtf8().constData(),

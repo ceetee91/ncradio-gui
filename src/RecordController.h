@@ -1,9 +1,11 @@
 #pragma once
 
 #include <QObject>
+#include <QSettings>
 #include <QString>
 #include <QStringList>
 #include <QTimer>
+#include <QUrl>
 
 extern "C" {
 #include "record.h"
@@ -34,6 +36,10 @@ class RecordController : public QObject
     // covers both since setFormat() emits it in addition to formatChanged.
     Q_PROPERTY(QString qualityLabel READ qualityLabel NOTIFY settingsChanged)
     Q_PROPERTY(bool resamplingAvailable READ resamplingAvailable CONSTANT)
+    // GUI-only settings (not part of the vendored Config struct, so they
+    // live in QSettings — same pattern as ThemeController's dark/light).
+    Q_PROPERTY(QString destinationFolder READ destinationFolder WRITE setDestinationFolder NOTIFY settingsChanged)
+    Q_PROPERTY(bool skipFilenamePrompt READ skipFilenamePrompt WRITE setSkipFilenamePrompt NOTIFY settingsChanged)
 
 public:
     explicit RecordController(ConfigStore *configStore, AudioController *audioController, QObject *parent = nullptr);
@@ -66,6 +72,18 @@ public:
 #endif
     }
 
+    QString destinationFolder() const;
+    void setDestinationFolder(const QString &path);
+    // FolderDialog.selectedFolder is a URL; QUrl::toLocalFile() handles
+    // the file:// scheme and percent-encoding correctly, unlike ad-hoc
+    // string surgery on the QML side.
+    Q_INVOKABLE void setDestinationFolderFromUrl(const QUrl &url);
+    bool skipFilenamePrompt() const;
+    void setSkipFilenamePrompt(bool on);
+    // Joins destinationFolder with a bare filename using proper path
+    // semantics (handles a missing/extra trailing slash correctly).
+    Q_INVOKABLE QString fullPath(const QString &name) const;
+
     Q_INVOKABLE bool start(const QString &pathWithoutExt);
     Q_INVOKABLE void stop();
 
@@ -86,4 +104,5 @@ private:
 
     ConfigStore *m_configStore;
     AudioController *m_audioController;
+    QSettings m_settings;
 };
