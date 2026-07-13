@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls as Controls
 import QtQuick.Layouts
 
 // Dedicated scan-in-progress view: progress bar + live 2-column
@@ -42,10 +41,30 @@ GlassPanel {
         RowLayout {
             Layout.fillWidth: true
             spacing: 16
-            Controls.ProgressBar {
+
+            // Plain Item-based bar instead of Controls.ProgressBar: the
+            // Breeze style's indeterminate-mode Repeater delegates bind to
+            // `parent` before Qt Quick has attached them, which throws a
+            // harmless but noisy "Cannot read property of null" warning
+            // even though this bar is never indeterminate.
+            Item {
+                id: scanProgressBar
                 Layout.fillWidth: true
-                from: 0; to: 1
-                value: radio.scanProgress
+                implicitHeight: 6
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: height / 2
+                    color: Theme.trackBg
+                }
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    radius: height / 2
+                    width: Math.max(height, parent.width * radio.scanProgress)
+                    color: Theme.amber
+                }
             }
             Text {
                 text: Math.round(radio.scanProgress * 100) + "%"
