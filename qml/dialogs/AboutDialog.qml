@@ -26,7 +26,7 @@ GlassDialog {
     }
     Controls.Label {
         Layout.alignment: Qt.AlignHCenter
-        text: "v" + Qt.application.version + " · config-compatible with ncradio 1.2"
+        text: "v" + Qt.application.version + " · based on ncradio 1.2"
         color: Theme.textSecondary
     }
 

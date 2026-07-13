@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
     app.setOrganizationName(QStringLiteral("ncradio"));
     app.setApplicationName(QStringLiteral("ncradio-gui"));
-    app.setApplicationVersion(QStringLiteral("0.1"));
+    app.setApplicationVersion(QStringLiteral("0.5"));
     QIcon::setThemeName(QStringLiteral("breeze"));
 
     // Graceful shutdown on SIGTERM/SIGINT (self-pipe trick — signal handlers

@@ -13,6 +13,19 @@ Item {
 
     Component.onCompleted: audio.refreshDevices()
 
+    // Mirrors ncradio.c's M_SETTINGS mode: Esc or 'o' goes back to the
+    // main screen.
+    Shortcut {
+        sequence: "Escape"
+        enabled: root.Controls.StackView.status === Controls.StackView.Active
+        onActivated: root.backRequested()
+    }
+    Shortcut {
+        sequence: "O"
+        enabled: root.Controls.StackView.status === Controls.StackView.Active
+        onActivated: root.backRequested()
+    }
+
     MiniHeader {
         id: header
         anchors.top: parent.top

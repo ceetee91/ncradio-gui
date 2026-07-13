@@ -11,6 +11,81 @@ Item {
     signal settingsRequested()
     signal equalizerRequested()
 
+    readonly property bool pageActive: Controls.StackView.status === Controls.StackView.Active
+    readonly property bool typing: Window.activeFocusItem instanceof TextInput
+    readonly property bool navGuard: pageActive && !typing && radio.ready && !radio.scanning
+    readonly property bool presetSelected: presetList.currentIndex >= 0 && presetList.currentIndex < configStore.presetCount
+
+    function presetLabel(idx) {
+        const freqMhz = (configStore.presetFreqHz(idx) / 1000000.0).toFixed(2);
+        const name = configStore.presetName(idx);
+        return freqMhz + (name.length > 0 ? " · " + name : "");
+    }
+
+    // ---------------- Keyboard shortcuts (mirrors ncradio.c's M_NORMAL
+    // key bindings) — disabled while typing in a text field, while this
+    // page isn't the one on top of the StackView, or (for tuning actions)
+    // while a scan is in progress, same as the equivalent buttons below.
+    Shortcut { sequence: "S"; enabled: root.navGuard; onActivated: radio.startScan() }
+    Shortcut { sequence: ","; enabled: root.navGuard; onActivated: radio.stepDown() }
+    Shortcut { sequence: "."; enabled: root.navGuard; onActivated: radio.stepUp() }
+    Shortcut { sequence: "<"; enabled: root.navGuard; onActivated: radio.seekBackward() }
+    Shortcut { sequence: ">"; enabled: root.navGuard; onActivated: radio.seekForward() }
+    Shortcut { sequence: "T"; enabled: root.navGuard; onActivated: manualTuneDialog.open() }
+    Shortcut { sequence: "O"; enabled: root.pageActive && !root.typing; onActivated: root.settingsRequested() }
+    Shortcut { sequence: "Shift+E"; enabled: root.pageActive && !root.typing; onActivated: root.equalizerRequested() }
+    Shortcut { sequence: "R"; enabled: root.pageActive && !root.typing && audio.running; onActivated: recordDialog.open() }
+    Shortcut { sequence: "+"; enabled: root.pageActive && !root.typing; onActivated: radio.volume = Math.min(100, radio.volume + 5) }
+    Shortcut { sequence: "="; enabled: root.pageActive && !root.typing; onActivated: radio.volume = Math.min(100, radio.volume + 5) }
+    Shortcut { sequence: "-"; enabled: root.pageActive && !root.typing; onActivated: radio.volume = Math.max(0, radio.volume - 5) }
+    Shortcut { sequence: "_"; enabled: root.pageActive && !root.typing; onActivated: radio.volume = Math.max(0, radio.volume - 5) }
+    Shortcut { sequence: "M"; enabled: root.pageActive && !root.typing; onActivated: radio.muted = !radio.muted }
+    Shortcut { sequence: "A"; enabled: root.pageActive && !root.typing && !radio.scanning; onActivated: manualAddDialog.open() }
+    Shortcut {
+        sequence: "D"
+        enabled: root.pageActive && !root.typing && root.presetSelected
+        onActivated: {
+            deletePresetDialog.pendingIndex = presetList.currentIndex;
+            deletePresetDialog.message = "This will permanently remove “" + root.presetLabel(presetList.currentIndex)
+                + "” from your presets. This cannot be undone.";
+            deletePresetDialog.open();
+        }
+    }
+    Shortcut {
+        sequence: "E"
+        enabled: root.pageActive && !root.typing && root.presetSelected
+        onActivated: { renamePresetDialog.presetIndex = presetList.currentIndex; renamePresetDialog.open(); }
+    }
+    Shortcut { sequence: "Up"; enabled: root.pageActive && !root.typing; onActivated: presetList.decrementCurrentIndex() }
+    Shortcut { sequence: "Down"; enabled: root.pageActive && !root.typing; onActivated: presetList.incrementCurrentIndex() }
+    Shortcut {
+        sequence: "Return"
+        enabled: root.pageActive && !root.typing && root.presetSelected
+        onActivated: radio.tuneToHz(configStore.presetFreqHz(presetList.currentIndex))
+    }
+    Shortcut {
+        sequence: "Enter"
+        enabled: root.pageActive && !root.typing && root.presetSelected
+        onActivated: radio.tuneToHz(configStore.presetFreqHz(presetList.currentIndex))
+    }
+    Shortcut {
+        sequence: "PgUp"
+        enabled: root.pageActive && !root.typing && configStore.presetCount > 0
+        onActivated: {
+            const page = Math.max(1, Math.floor(presetList.height / 46) - 1);
+            presetList.currentIndex = Math.max(0, presetList.currentIndex - page);
+        }
+    }
+    Shortcut {
+        sequence: "PgDown"
+        enabled: root.pageActive && !root.typing && configStore.presetCount > 0
+        onActivated: {
+            const page = Math.max(1, Math.floor(presetList.height / 46) - 1);
+            presetList.currentIndex = Math.min(configStore.presetCount - 1, presetList.currentIndex + page);
+        }
+    }
+    Shortcut { sequence: "Q"; enabled: root.pageActive && !root.typing; onActivated: Qt.quit() }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 0

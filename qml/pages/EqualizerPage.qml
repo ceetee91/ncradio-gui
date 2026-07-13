@@ -10,6 +10,46 @@ Item {
     id: root
     signal backRequested()
 
+    readonly property bool pageActive: root.Controls.StackView.status === Controls.StackView.Active
+
+    function combinedPresetNames() {
+        return eq.builtinPresetNames.concat(eq.customPresetNames);
+    }
+    function loadPresetAt(idx) {
+        if (idx < eq.builtinPresetNames.length) eq.loadBuiltinPreset(idx);
+        else eq.loadCustomPreset(idx - eq.builtinPresetNames.length);
+    }
+    function cyclePreset(delta) {
+        const names = combinedPresetNames();
+        if (names.length === 0) return;
+        let idx = names.indexOf(eq.activePresetName);
+        if (idx < 0) idx = 0;
+        loadPresetAt((idx + delta + names.length) % names.length);
+    }
+    function deleteCurrentPreset() {
+        const idx = eq.customPresetNames.indexOf(eq.activePresetName);
+        if (idx >= 0) {
+            deleteEqDialog.pendingIndex = idx;
+            deleteEqDialog.message = "This will permanently remove the custom preset “"
+                + eq.activePresetName + "”. This cannot be undone.";
+            deleteEqDialog.open();
+        }
+    }
+
+    // Mirrors ncradio.c's M_EQ mode key bindings.
+    Shortcut { sequence: "Escape"; enabled: root.pageActive; onActivated: root.backRequested() }
+    Shortcut { sequence: "Shift+E"; enabled: root.pageActive; onActivated: root.backRequested() }
+    Shortcut { sequence: "Space"; enabled: root.pageActive; onActivated: eq.enabled = !eq.enabled }
+    Shortcut { sequence: "["; enabled: root.pageActive; onActivated: root.cyclePreset(-1) }
+    Shortcut { sequence: "]"; enabled: root.pageActive; onActivated: root.cyclePreset(1) }
+    Shortcut { sequence: "0"; enabled: root.pageActive; onActivated: eq.loadFlat() }
+    Shortcut { sequence: "S"; enabled: root.pageActive; onActivated: savePresetDialog.open() }
+    Shortcut {
+        sequence: "Delete"
+        enabled: root.pageActive && eq.customPresetNames.includes(eq.activePresetName)
+        onActivated: root.deleteCurrentPreset()
+    }
+
     MiniHeader {
         id: header
         anchors.top: parent.top
@@ -67,15 +107,7 @@ Item {
                     icon: "trash"
                     size: 36
                     enabled: eq.customPresetNames.includes(eq.activePresetName)
-                    onClicked: {
-                        const idx = eq.customPresetNames.indexOf(eq.activePresetName);
-                        if (idx >= 0) {
-                            deleteEqDialog.pendingIndex = idx;
-                            deleteEqDialog.message = "This will permanently remove the custom preset “"
-                                + eq.activePresetName + "”. This cannot be undone.";
-                            deleteEqDialog.open();
-                        }
-                    }
+                    onClicked: root.deleteCurrentPreset()
                 }
                 AccentButton {
                     text: "Flat"
