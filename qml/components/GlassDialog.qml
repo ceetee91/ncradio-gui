@@ -25,6 +25,16 @@ Controls.Popup {
     focus: true
     closePolicy: Controls.Popup.CloseOnEscape | Controls.Popup.CloseOnPressOutside
 
+    // Item-based TapHandlers (used by our custom buttons) don't stop event
+    // delivery to items stacked below them the way MouseArea does, so a tap
+    // inside this dialog can also land on a background button at the same
+    // screen position. Disable the rest of the window for the duration.
+    Connections {
+        target: root
+        function onOpened() { Theme.pushModal() }
+        function onClosed() { Theme.popModal() }
+    }
+
     background: GlassPanel {
         elevated: true
         glow: true

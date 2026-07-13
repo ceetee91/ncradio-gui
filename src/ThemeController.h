@@ -13,6 +13,7 @@ class ThemeController : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool dark READ dark WRITE setDark NOTIFY darkChanged)
+    Q_PROPERTY(int modalDepth READ modalDepth NOTIFY modalDepthChanged)
 
     Q_PROPERTY(QColor bgBase READ bgBase NOTIFY darkChanged)
     Q_PROPERTY(QColor bgBase2 READ bgBase2 NOTIFY darkChanged)
@@ -62,6 +63,15 @@ public:
     bool dark() const { return m_dark; }
     void setDark(bool d);
 
+    int modalDepth() const { return m_modalDepth; }
+    // Popups (Item-based TapHandlers) don't stop event delivery to items
+    // stacked below them the way MouseArea does, so a tap inside an open
+    // GlassDialog can also land on a background button at the same screen
+    // position. GlassDialog calls these on open/close so the main window
+    // can disable its background content for the duration.
+    Q_INVOKABLE void pushModal();
+    Q_INVOKABLE void popModal();
+
     Q_INVOKABLE QColor withAlpha(const QColor &c, double alpha) const;
 
     QColor bgBase() const;
@@ -108,8 +118,10 @@ public:
 
 signals:
     void darkChanged();
+    void modalDepthChanged();
 
 private:
     bool m_dark = true;
+    int m_modalDepth = 0;
     QSettings m_settings;
 };

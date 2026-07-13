@@ -60,6 +60,18 @@ void ThemeController::setDark(bool d)
     emit darkChanged();
 }
 
+void ThemeController::pushModal()
+{
+    ++m_modalDepth;
+    emit modalDepthChanged();
+}
+
+void ThemeController::popModal()
+{
+    --m_modalDepth;
+    emit modalDepthChanged();
+}
+
 QColor ThemeController::withAlpha(const QColor &c, double a) const
 {
     return alpha(c, a);

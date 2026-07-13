@@ -42,6 +42,9 @@ Kirigami.ApplicationWindow {
     Controls.StackView {
         id: stackView
         anchors.fill: parent
+        // Disabled while any GlassDialog is open: see GlassDialog.qml for
+        // why this is needed (Pointer Handlers don't respect Popup modality).
+        enabled: Theme.modalDepth === 0
         initialItem: nowPlayingComponent
 
         popEnter: Transition {}
