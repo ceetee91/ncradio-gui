@@ -228,34 +228,48 @@ Item {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         clip: true
-                        spacing: 2
+                        // Spacing is baked into each visible delegate's own
+                        // height below instead of set here — ListView's
+                        // own `spacing` is added between *every* pair of
+                        // delegates regardless of visibility, so filtered-
+                        // out (zero-height) rows in between two visible
+                        // ones were stacking up extra gaps.
+                        spacing: 0
                         model: presetModel
                         Component.onCompleted: currentIndex = configStore.findPreset(radio.frequencyMhz)
 
-                        delegate: StationListItem {
-                            width: presetList.width
-                            visible: searchField.text.length === 0
+                        delegate: Item {
+                            id: delegateRoot
+                            readonly property bool matches: searchField.text.length === 0
                                 || model.name.toLowerCase().includes(searchField.text.toLowerCase())
                                 || model.freqLabel.includes(searchField.text)
-                            height: visible ? implicitHeight : 0
-                            freqLabel: model.freqLabel
-                            name: model.name
-                            tuned: model.freqHz === radio.frequencyHz
-                            selected: presetList.currentIndex === index
-                            onClicked: {
-                                presetList.currentIndex = index;
-                                radio.tuneToHz(model.freqHz);
-                            }
-                            onEditRequested: {
-                                renamePresetDialog.presetIndex = index;
-                                renamePresetDialog.open();
-                            }
-                            onDeleteRequested: {
-                                deletePresetDialog.pendingIndex = index;
-                                deletePresetDialog.message = "This will permanently remove “"
-                                    + model.freqLabel + (model.name.length > 0 ? " · " + model.name : "")
-                                    + "” from your presets. This cannot be undone.";
-                                deletePresetDialog.open();
+                            width: presetList.width
+                            height: matches ? row.implicitHeight + 2 : 0
+                            visible: matches
+
+                            StationListItem {
+                                id: row
+                                anchors.top: parent.top
+                                width: parent.width
+                                freqLabel: model.freqLabel
+                                name: model.name
+                                tuned: model.freqHz === radio.frequencyHz
+                                selected: presetList.currentIndex === index
+                                onClicked: {
+                                    presetList.currentIndex = index;
+                                    radio.tuneToHz(model.freqHz);
+                                }
+                                onEditRequested: {
+                                    renamePresetDialog.presetIndex = index;
+                                    renamePresetDialog.open();
+                                }
+                                onDeleteRequested: {
+                                    deletePresetDialog.pendingIndex = index;
+                                    deletePresetDialog.message = "This will permanently remove “"
+                                        + model.freqLabel + (model.name.length > 0 ? " · " + model.name : "")
+                                        + "” from your presets. This cannot be undone.";
+                                    deletePresetDialog.open();
+                                }
                             }
                         }
                     }

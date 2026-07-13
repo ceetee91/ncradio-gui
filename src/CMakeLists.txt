@@ -41,6 +41,20 @@ qt_add_resources(ncradio-gui "fonts"
     ${CMAKE_SOURCE_DIR}/fonts/Orbitron-Variable.ttf
 )
 
+qt_add_resources(ncradio-gui "icons"
+  PREFIX "/icons"
+  BASE ${CMAKE_SOURCE_DIR}/icons
+  FILES
+    ${CMAKE_SOURCE_DIR}/icons/ncradio-gui-16.png
+    ${CMAKE_SOURCE_DIR}/icons/ncradio-gui-22.png
+    ${CMAKE_SOURCE_DIR}/icons/ncradio-gui-24.png
+    ${CMAKE_SOURCE_DIR}/icons/ncradio-gui-32.png
+    ${CMAKE_SOURCE_DIR}/icons/ncradio-gui-48.png
+    ${CMAKE_SOURCE_DIR}/icons/ncradio-gui-64.png
+    ${CMAKE_SOURCE_DIR}/icons/ncradio-gui-128.png
+    ${CMAKE_SOURCE_DIR}/icons/ncradio-gui-256.png
+)
+
 target_link_libraries(ncradio-gui PRIVATE
   Qt6::Core
   Qt6::Quick

@@ -99,6 +99,17 @@ Item {
                 width: scrollView.availableWidth - 64
                 x: 32
 
+                // Kirigami.FormData labels/section headers are rendered by
+                // Kirigami itself using Kirigami.Theme.*, which follows the
+                // system Plasma color scheme — not our own light/dark
+                // toggle — so without this override they stay whatever
+                // (often near-white) the system scheme dictates,
+                // unreadable against our light-mode background.
+                Kirigami.Theme.inherit: false
+                Kirigami.Theme.colorSet: Kirigami.Theme.View
+                Kirigami.Theme.textColor: Theme.textPrimary
+                Kirigami.Theme.disabledTextColor: Theme.textTertiary
+
                 Item { id: generalSection; Kirigami.FormData.isSection: true; Kirigami.FormData.label: "General / Tuning" }
 
                 Controls.ComboBox {

@@ -36,6 +36,11 @@ int main(int argc, char *argv[])
     app.setApplicationVersion(QStringLiteral("0.5"));
     QIcon::setThemeName(QStringLiteral("breeze"));
 
+    QIcon appIcon;
+    for (const int size : {16, 22, 24, 32, 48, 64, 128, 256})
+        appIcon.addFile(QStringLiteral(":/icons/ncradio-gui-%1.png").arg(size), QSize(size, size));
+    app.setWindowIcon(appIcon);
+
     // Graceful shutdown on SIGTERM/SIGINT (self-pipe trick — signal handlers
     // must stay async-signal-safe, so just wake the event loop via a socket).
     ::socketpair(AF_UNIX, SOCK_STREAM, 0, g_signalFd);
