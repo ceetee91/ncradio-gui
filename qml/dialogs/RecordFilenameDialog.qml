@@ -23,6 +23,21 @@ GlassDialog {
         return name.replace(/[\/\\:*?"<>|]+/g, "").trim();
     }
 
+    function formatDetailLabel() {
+        var base = recorder.availableFormatNames[recorder.format] + " · " + recorder.sampleRate + " Hz";
+        var channels = recorder.stereo ? "Stereo" : "Mono";
+        switch (recorder.formatExtension) {
+        case ".mp3":
+            return base + " · " + Math.round(recorder.quality) + "kb/s " + channels;
+        case ".ogg":
+            return base + " · " + channels + " · Q" + recorder.quality.toFixed(1);
+        case ".flac":
+            return base + " · " + channels + " · Level " + Math.round(recorder.quality);
+        default:
+            return base + " · " + channels;
+        }
+    }
+
     function defaultFilename() {
         var stationName = "";
         var presetIdx = configStore.findPreset(radio.frequencyMhz);
@@ -62,8 +77,7 @@ GlassDialog {
         Layout.fillWidth: true
         Controls.Label { text: "Format"; color: Theme.textSecondary; Layout.fillWidth: true }
         Controls.Label {
-            text: recorder.availableFormatNames[recorder.format] + " · " + recorder.sampleRate
-                + " Hz · " + (recorder.stereo ? "Stereo" : "Mono")
+            text: formatDetailLabel()
             font.family: Theme.fontMono
             color: Theme.cyan
         }
