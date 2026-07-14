@@ -29,7 +29,7 @@ and record).
 
 ## Relation to ncradio
 
-`/data/ncradio` is the original ncurses/terminal FM radio controller.
+[ncradio](https://github.com/ceetee91/ncradio) is the original ncurses/terminal FM radio controller.
 ncradio-gui does not reimplement its logic — it **vendors ncradio's C
 engine wholesale** and puts a Qt/QML UI on top of it:
 
