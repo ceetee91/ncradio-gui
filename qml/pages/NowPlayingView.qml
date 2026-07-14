@@ -13,7 +13,7 @@ Item {
 
     readonly property bool pageActive: Controls.StackView.status === Controls.StackView.Active
     readonly property bool typing: Window.activeFocusItem instanceof TextInput
-    readonly property bool navGuard: pageActive && !typing && radio.ready && !radio.scanning
+    readonly property bool navGuard: pageActive && !typing && radio.ready && !radio.scanning && !recorder.recording
     readonly property bool presetSelected: presetList.currentIndex >= 0 && presetList.currentIndex < configStore.presetCount
 
     function presetLabel(idx) {
@@ -72,7 +72,11 @@ Item {
     // key bindings) — disabled while typing in a text field, while this
     // page isn't the one on top of the StackView, or (for tuning actions)
     // while a scan is in progress, same as the equivalent buttons below.
-    Shortcut { sequence: "S"; enabled: root.navGuard; onActivated: radio.startScan() }
+    Shortcut {
+        sequence: "S"
+        enabled: root.pageActive && !root.typing && (root.navGuard || recorder.recording)
+        onActivated: recorder.recording ? recorder.stop() : radio.startScan()
+    }
     Shortcut { sequence: ","; enabled: root.navGuard; onActivated: radio.stepDown() }
     Shortcut { sequence: "."; enabled: root.navGuard; onActivated: radio.stepUp() }
     Shortcut { sequence: "<"; enabled: root.navGuard; onActivated: radio.seekBackward() }
@@ -80,13 +84,18 @@ Item {
     Shortcut { sequence: "T"; enabled: root.navGuard; onActivated: manualTuneDialog.open() }
     Shortcut { sequence: "O"; enabled: root.pageActive && !root.typing; onActivated: root.settingsRequested() }
     Shortcut { sequence: "Shift+E"; enabled: root.pageActive && !root.typing; onActivated: root.equalizerRequested() }
-    Shortcut { sequence: "R"; enabled: root.pageActive && !root.typing && audio.running; onActivated: root.requestRecord() }
+    Shortcut {
+        sequence: "R"
+        enabled: root.pageActive && !root.typing
+            && ((audio.running && !radio.scanning && !radio.seeking) || recorder.recording)
+        onActivated: recorder.recording ? recorder.stop() : root.requestRecord()
+    }
     Shortcut { sequence: "+"; enabled: root.pageActive && !root.typing; onActivated: radio.volume = Math.min(100, radio.volume + 5) }
     Shortcut { sequence: "="; enabled: root.pageActive && !root.typing; onActivated: radio.volume = Math.min(100, radio.volume + 5) }
     Shortcut { sequence: "-"; enabled: root.pageActive && !root.typing; onActivated: radio.volume = Math.max(0, radio.volume - 5) }
     Shortcut { sequence: "_"; enabled: root.pageActive && !root.typing; onActivated: radio.volume = Math.max(0, radio.volume - 5) }
     Shortcut { sequence: "M"; enabled: root.pageActive && !root.typing; onActivated: radio.muted = !radio.muted }
-    Shortcut { sequence: "A"; enabled: root.pageActive && !root.typing && !radio.scanning; onActivated: root.requestAddPreset() }
+    Shortcut { sequence: "A"; enabled: root.pageActive && !root.typing && !radio.scanning && !recorder.recording; onActivated: root.requestAddPreset() }
     Shortcut {
         sequence: "D"
         enabled: root.pageActive && !root.typing && root.presetSelected
@@ -106,12 +115,12 @@ Item {
     Shortcut { sequence: "Down"; enabled: root.pageActive && !root.typing; onActivated: root.navigatePreset(1) }
     Shortcut {
         sequence: "Return"
-        enabled: root.pageActive && !root.typing && root.presetSelected
+        enabled: root.pageActive && !root.typing && root.presetSelected && !recorder.recording
         onActivated: radio.tuneToHz(configStore.presetFreqHz(presetList.currentIndex))
     }
     Shortcut {
         sequence: "Enter"
-        enabled: root.pageActive && !root.typing && root.presetSelected
+        enabled: root.pageActive && !root.typing && root.presetSelected && !recorder.recording
         onActivated: radio.tuneToHz(configStore.presetFreqHz(presetList.currentIndex))
     }
     Shortcut {
@@ -125,7 +134,11 @@ Item {
         onActivated: root.navigatePreset(Math.max(1, Math.floor(presetList.height / 46) - 1))
     }
     Shortcut { sequence: "Q"; enabled: root.pageActive && !root.typing; onActivated: Qt.quit() }
-    Shortcut { sequence: "Escape"; enabled: root.pageActive && radio.scanning; onActivated: radio.stopScanAndDiscard() }
+    Shortcut {
+        sequence: "Escape"
+        enabled: root.pageActive && (radio.scanning || recorder.recording)
+        onActivated: recorder.recording ? recorder.stop() : radio.stopScanAndDiscard()
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -182,8 +195,8 @@ Item {
             Item {
                 Layout.preferredWidth: 320
                 Layout.fillHeight: true
-                opacity: radio.scanning ? 0.5 : 1
-                enabled: !radio.scanning
+                opacity: (radio.scanning || recorder.recording) ? 0.5 : 1
+                enabled: !radio.scanning && !recorder.recording
 
                 Rectangle { anchors.fill: parent; color: Theme.glassElevated }
                 Rectangle { anchors.right: parent.right; width: 1; height: parent.height; color: Theme.glassBorder }
@@ -194,9 +207,9 @@ Item {
                     spacing: 12
 
                     Text {
-                        visible: radio.scanning
+                        visible: radio.scanning || recorder.recording
                         Layout.fillWidth: true
-                        text: "Presets locked during scan"
+                        text: radio.scanning ? "Presets locked during scan" : "Presets locked while recording"
                         color: Theme.textTertiary
                         font.family: Theme.fontUi
                         font.pointSize: 10
@@ -204,7 +217,7 @@ Item {
                     }
 
                     RowLayout {
-                        visible: !radio.scanning
+                        visible: !radio.scanning && !recorder.recording
                         Layout.fillWidth: true
                         spacing: 8
                         Controls.TextField {
@@ -363,17 +376,17 @@ Item {
                             Layout.fillWidth: true
                             visible: !radio.seeking
 
-                            IconButton { icon: "seek-back"; enabled: radio.ready && !radio.scanning; onClicked: radio.seekBackward() }
-                            IconButton { icon: "step-back"; enabled: radio.ready && !radio.scanning; onClicked: radio.stepDown() }
+                            IconButton { icon: "seek-back"; enabled: radio.ready && !radio.scanning && !recorder.recording; onClicked: radio.seekBackward() }
+                            IconButton { icon: "step-back"; enabled: radio.ready && !radio.scanning && !recorder.recording; onClicked: radio.stepDown() }
                             AccentButton {
                                 text: "Tune"
                                 icon: "search"
                                 variant: "secondary"
-                                enabled: radio.ready && !radio.scanning
+                                enabled: radio.ready && !radio.scanning && !recorder.recording
                                 onClicked: manualTuneDialog.open()
                             }
-                            IconButton { icon: "step-fwd"; enabled: radio.ready && !radio.scanning; onClicked: radio.stepUp() }
-                            IconButton { icon: "seek-fwd"; enabled: radio.ready && !radio.scanning; onClicked: radio.seekForward() }
+                            IconButton { icon: "step-fwd"; enabled: radio.ready && !radio.scanning && !recorder.recording; onClicked: radio.stepUp() }
+                            IconButton { icon: "seek-fwd"; enabled: radio.ready && !radio.scanning && !recorder.recording; onClicked: radio.seekForward() }
 
                             Item { Layout.fillWidth: true }
 
@@ -381,7 +394,7 @@ Item {
                                 text: "Scan Band"
                                 icon: "scan"
                                 variant: "primary"
-                                enabled: radio.ready
+                                enabled: radio.ready && !recorder.recording
                                 onClicked: radio.startScan()
                             }
                         }
@@ -428,7 +441,7 @@ Item {
                                 text: recorder.recording ? "Stop" : "Record"
                                 icon: "record"
                                 variant: "danger"
-                                enabled: audio.running || recorder.recording
+                                enabled: (audio.running && !radio.scanning && !radio.seeking) || recorder.recording
                                 onClicked: recorder.recording ? recorder.stop() : root.requestRecord()
                             }
                         }
