@@ -132,7 +132,7 @@ void ThemeController::setSeedSlot(Seed &s, const QString &key, const QColor &c)
 
 ThemeController::ThemeController(QObject *parent)
     : QObject(parent)
-    , m_settings(QStringLiteral("ncradio"), QStringLiteral("ncradio-gui"))
+    , m_settings(QStringLiteral("ceetee91"), QStringLiteral("ncradio-gui"))
 {
     for (const BuiltinDef &b : kBuiltins) {
         Theme t;

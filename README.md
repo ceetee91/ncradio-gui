@@ -56,7 +56,7 @@ engine wholesale** and puts a Qt/QML UI on top of it:
   one are visible in the other. A handful of GUI-only settings that have
   no ncradio equivalent (recording destination folder, "skip filename
   prompt", color theme selection and custom themes) live separately in Qt
-  `QSettings` (org `ncradio`, app `ncradio-gui`).
+  `QSettings` (org `ceetee91`, app `ncradio-gui`).
 
 In short: ncradio is the engine and the reference behavior; ncradio-gui is
 a modern UI wrapped around the exact same tuning/audio/recording code.
@@ -114,7 +114,7 @@ build/src/ncradio-gui [/dev/radioN]
 
 CMake auto-detects everything under `find_package(PkgConfig)`/
 `pkg_check_modules` — PipeWire vs. ALSA, libudev, and each recording
-codec — and only compiles in what's found, mirroring `/data/ncradio`'s
+codec — and only compiles in what's found, mirroring `ncradio`'s
 own `./configure` script. Each feature can also be forced off explicitly
 with a CMake option:
 

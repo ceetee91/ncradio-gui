@@ -10,7 +10,7 @@ RecordController::RecordController(ConfigStore *configStore, AudioController *au
     : QObject(parent)
     , m_configStore(configStore)
     , m_audioController(audioController)
-    , m_settings(QStringLiteral("ncradio"), QStringLiteral("ncradio-gui"))
+    , m_settings(QStringLiteral("ceetee91"), QStringLiteral("ncradio-gui"))
 {
     m_elapsedTimer.setInterval(1000);
     connect(&m_elapsedTimer, &QTimer::timeout, this, [this] {

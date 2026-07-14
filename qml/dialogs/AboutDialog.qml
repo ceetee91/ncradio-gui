@@ -29,6 +29,11 @@ GlassDialog {
         text: "v" + Qt.application.version + " · based on ncradio 1.2"
         color: Theme.textSecondary
     }
+    Controls.Label {
+        Layout.alignment: Qt.AlignHCenter
+        text: "by Constantinos Tsakiris"
+        color: Theme.textSecondary
+    }
 
     Rectangle { Layout.fillWidth: true; Layout.topMargin: 12; Layout.bottomMargin: 4; height: 1; color: Theme.glassBorder }
 
