@@ -55,8 +55,8 @@ engine wholesale** and puts a Qt/QML UI on top of it:
   (`backend/config.c`) — presets, EQ settings, and tuning options added in
   one are visible in the other. A handful of GUI-only settings that have
   no ncradio equivalent (recording destination folder, "skip filename
-  prompt", light/dark theme) live separately in Qt `QSettings`
-  (org `ncradio`, app `ncradio-gui`).
+  prompt", color theme selection and custom themes) live separately in Qt
+  `QSettings` (org `ncradio`, app `ncradio-gui`).
 
 In short: ncradio is the engine and the reference behavior; ncradio-gui is
 a modern UI wrapped around the exact same tuning/audio/recording code.
@@ -165,7 +165,8 @@ needs a real rebuild — editing a `.qml` file and restarting isn't enough.
   per-format recording settings (bitrate/quality/sample rate/stereo,
   independently for WAV/MP3/OGG/FLAC). A few GUI-only conveniences with
   no ncradio equivalent (recording destination folder, skip-filename-
-  prompt, light/dark theme) are stored separately via Qt `QSettings`.
+  prompt, and the color-theme selection + any custom themes) are stored
+  separately via Qt `QSettings` (see [Appearance & themes](#appearance--themes)).
 - **Recording is stateful.** While a recording is in progress, station
   changes (presets, step/seek/manual tune) and starting a band scan are
   disabled in the UI, and `R`/`S`/`Escape` all stop the recording instead
@@ -179,6 +180,49 @@ needs a real rebuild — editing a `.qml` file and restarting isn't enough.
   and Recording settings; `EqualizerPage.qml` is the full-screen 11-band
   EQ with built-in presets (Flat, Rock, Pop, Classical, Jazz, Electronic)
   plus user-saved custom presets.
+
+## Appearance & themes
+
+The whole UI is driven by a single set of color tokens (backgrounds, glass
+surfaces, accent colors, text levels) exposed to QML by `ThemeController`
+(`src/ThemeController.{h,cpp}`). Rather than a single hardcoded dark and
+light palette, the app ships a registry of named **color themes** you can
+switch between and extend.
+
+**Light/dark toggle.** The theme button in the Now Playing header (or the
+"Preview dark mode" switch in Settings) flips between light and dark mode.
+Each mode remembers its own *active theme* — so you pick one theme for dark
+mode and, independently, one for light mode, and the toggle swaps between
+those two.
+
+**Built-in presets.** Eight legible, contrast-checked presets come built in
+(selectable in **Settings → Appearance**):
+
+| Dark | Light |
+|---|---|
+| Default (Dark) | Default (Light) |
+| Nord Night | Solarized Light |
+| Synthwave | Rosé Dawn |
+| Amber Terminal | Paper |
+
+**Custom themes.** In **Settings → Appearance → Customize** you can:
+
+- **Duplicate** any preset (or existing custom theme) as a starting point
+  and give it a name — built-in presets are read-only, so duplicating is
+  how you begin.
+- Edit **8 curated colors** — two backgrounds, the four accent slots
+  (primary, success, warning, danger) and two text levels — each via a
+  native color picker. Every other token (glass tints, borders, dim accent
+  and tertiary-text variants, track and shadow) is **derived automatically**
+  from those eight plus the theme's light/dark flag, so a custom theme stays
+  legible by construction.
+- **Rename** or **Delete** a custom theme (deleting the active one falls
+  back to that mode's Default preset).
+
+Edits apply live across the whole app. Custom themes and the active
+dark/light selections are persisted in Qt `QSettings` (the `Appearance`
+group and a `CustomThemes` array), separate from the shared
+`~/.ncradio.conf`.
 
 ## Keyboard shortcuts
 

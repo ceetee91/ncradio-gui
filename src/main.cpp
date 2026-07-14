@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
     app.setOrganizationName(QStringLiteral("ncradio"));
     app.setApplicationName(QStringLiteral("ncradio-gui"));
-    app.setApplicationVersion(QStringLiteral("0.6"));
+    app.setApplicationVersion(QStringLiteral("0.7"));
     QIcon::setThemeName(QStringLiteral("breeze"));
 
     QIcon appIcon;

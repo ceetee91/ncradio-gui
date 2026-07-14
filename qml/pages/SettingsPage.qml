@@ -4,6 +4,7 @@ import QtQuick.Dialogs as Dialogs
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../components"
+import "../dialogs"
 
 // Full-screen Settings page: mini-header + left category nav + scrollable
 // detail pane covering every field in Config — matches the Penpot
@@ -12,7 +13,44 @@ Item {
     id: root
     signal backRequested()
 
-    Component.onCompleted: audio.refreshDevices()
+    // Which theme the Appearance color editor is currently targeting. Bumped
+    // revision forces the swatch bindings (which call Theme.themeColor) to
+    // re-evaluate after an edit.
+    property string editTarget: ""
+    property int editRevision: 0
+
+    // Human-labelled editable color slots — must match ThemeController's
+    // editableKeys() order/names.
+    readonly property var colorSlots: [
+        { key: "bgBase",        label: "Background" },
+        { key: "bgBase2",       label: "Background (deep)" },
+        { key: "cyan",          label: "Primary accent" },
+        { key: "green",         label: "Success accent" },
+        { key: "amber",         label: "Warning accent" },
+        { key: "red",           label: "Danger accent" },
+        { key: "textPrimary",   label: "Text — primary" },
+        { key: "textSecondary", label: "Text — secondary" },
+    ]
+
+    // Select `name` as the edit target and make it the live preview: activate
+    // it for its mode and switch to that mode so edits show across the app.
+    function focusTheme(name) {
+        if (name.length === 0)
+            return;
+        root.editTarget = name;
+        if (Theme.themeIsDark(name)) {
+            Theme.activeDarkThemeName = name;
+            Theme.dark = true;
+        } else {
+            Theme.activeLightThemeName = name;
+            Theme.dark = false;
+        }
+    }
+
+    Component.onCompleted: {
+        audio.refreshDevices();
+        editTarget = Theme.dark ? Theme.activeDarkThemeName : Theme.activeLightThemeName;
+    }
 
     // Mirrors ncradio.c's M_SETTINGS mode: Esc or 'o' goes back to the
     // main screen.
@@ -60,6 +98,7 @@ Item {
                         { label: "General / Tuning", icon: "settings", anchor: generalSection },
                         { label: "Audio", icon: "volume", anchor: audioSection },
                         { label: "Recording", icon: "record", anchor: recordingSection },
+                        { label: "Appearance", icon: "theme", anchor: appearanceSection },
                     ]
                     delegate: Item {
                         required property var modelData
@@ -272,8 +311,163 @@ Item {
                     onToggled: recorder.applyEqToRecs = checked
                 }
 
+                Item { id: appearanceSection; Kirigami.FormData.isSection: true; Kirigami.FormData.label: "Appearance" }
+
+                Controls.ComboBox {
+                    Kirigami.FormData.label: "Dark theme:"
+                    model: Theme.darkThemes
+                    currentIndex: Theme.darkThemes.indexOf(Theme.activeDarkThemeName)
+                    onActivated: Theme.activeDarkThemeName = Theme.darkThemes[currentIndex]
+                }
+                Controls.ComboBox {
+                    Kirigami.FormData.label: "Light theme:"
+                    model: Theme.lightThemes
+                    currentIndex: Theme.lightThemes.indexOf(Theme.activeLightThemeName)
+                    onActivated: Theme.activeLightThemeName = Theme.lightThemes[currentIndex]
+                }
+                Controls.Switch {
+                    Kirigami.FormData.label: "Preview dark mode:"
+                    checked: Theme.dark
+                    onToggled: Theme.dark = checked
+                }
+
+                Item { Kirigami.FormData.isSection: true; Kirigami.FormData.label: "Customize" }
+
+                RowLayout {
+                    Kirigami.FormData.label: "Edit theme:"
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    Controls.ComboBox {
+                        id: editCombo
+                        Layout.fillWidth: true
+                        model: Theme.allThemes
+                        currentIndex: Theme.allThemes.indexOf(root.editTarget)
+                        onActivated: root.focusTheme(Theme.allThemes[currentIndex])
+                    }
+                    AccentButton {
+                        text: "Duplicate…"
+                        variant: "secondary"
+                        onClicked: {
+                            themeNameDialog.mode = "duplicate";
+                            themeNameDialog.sourceName = root.editTarget;
+                            themeNameDialog.open();
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Kirigami.FormData.label: " "
+                    spacing: 8
+                    visible: root.editTarget.length > 0 && !Theme.isBuiltin(root.editTarget)
+
+                    AccentButton {
+                        text: "Rename…"
+                        variant: "ghost"
+                        onClicked: {
+                            themeNameDialog.mode = "rename";
+                            themeNameDialog.sourceName = root.editTarget;
+                            themeNameDialog.open();
+                        }
+                    }
+                    AccentButton {
+                        text: "Delete"
+                        icon: "trash"
+                        variant: "danger"
+                        onClicked: deleteThemeDialog.open()
+                    }
+                }
+
+                Controls.Label {
+                    Kirigami.FormData.label: " "
+                    visible: root.editTarget.length > 0 && Theme.isBuiltin(root.editTarget)
+                    text: "Built-in preset — Duplicate it to customize colors."
+                    color: Theme.textTertiary
+                    font.pointSize: 9
+                    wrapMode: Text.WordWrap
+                }
+
+                // Curated 8-color editor. Each row: label + click-to-edit
+                // swatch. Enabled only for custom themes; built-ins are shown
+                // read-only.
+                Repeater {
+                    model: root.colorSlots
+                    delegate: RowLayout {
+                        required property var modelData
+                        Kirigami.FormData.label: modelData.label + ":"
+                        Layout.fillWidth: true
+                        spacing: 12
+                        readonly property bool editable: root.editTarget.length > 0 && !Theme.isBuiltin(root.editTarget)
+
+                        Rectangle {
+                            Layout.preferredWidth: 48
+                            Layout.preferredHeight: 28
+                            radius: Theme.radiusSm
+                            border.width: 1
+                            border.color: Theme.glassBorderStrong
+                            // editRevision forces re-evaluation after edits.
+                            color: (root.editRevision, root.editTarget.length > 0
+                                ? Theme.themeColor(root.editTarget, modelData.key) : "transparent")
+                            opacity: parent.editable ? 1 : 0.5
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: parent.parent.editable ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                enabled: parent.parent.editable
+                                onClicked: {
+                                    colorDialog.editKey = modelData.key;
+                                    colorDialog.selectedColor = Theme.themeColor(root.editTarget, modelData.key);
+                                    colorDialog.open();
+                                }
+                            }
+                        }
+                        Controls.Label {
+                            // editRevision forces re-evaluation after edits.
+                            text: (root.editRevision, root.editTarget.length > 0
+                                ? Theme.themeColor(root.editTarget, modelData.key).toString().toUpperCase() : "")
+                            color: Theme.textTertiary
+                            font.family: Theme.fontMono
+                            font.pointSize: 9
+                        }
+                    }
+                }
+
                 Item { Kirigami.FormData.isSection: false; height: 32 }
             }
+        }
+    }
+
+    ThemeNameDialog {
+        id: themeNameDialog
+        onAccepted: (name) => {
+            if (mode === "rename") {
+                Theme.renameCustomTheme(root.editTarget, name);
+                // renameCustomTheme uniquifies; re-resolve to the active name.
+                root.editTarget = Theme.dark ? Theme.activeDarkThemeName : Theme.activeLightThemeName;
+            } else {
+                const created = Theme.duplicateTheme(root.editTarget, name);
+                if (created.length > 0)
+                    root.editTarget = created;
+            }
+        }
+    }
+
+    DeleteConfirmDialog {
+        id: deleteThemeDialog
+        dialogTitle: "Delete Theme"
+        message: "Delete the custom theme \"" + root.editTarget + "\"? This cannot be undone."
+        onConfirmed: {
+            Theme.deleteCustomTheme(root.editTarget);
+            root.editTarget = Theme.dark ? Theme.activeDarkThemeName : Theme.activeLightThemeName;
+        }
+    }
+
+    Dialogs.ColorDialog {
+        id: colorDialog
+        property string editKey: ""
+        onAccepted: {
+            Theme.setThemeColor(root.editTarget, editKey, selectedColor);
+            root.editRevision++;
         }
     }
 
