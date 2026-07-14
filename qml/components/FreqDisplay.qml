@@ -6,6 +6,8 @@ Row {
     id: root
     property real mhz: 0
     property color accentColor: Theme.cyan
+    // Size of the big MHz digits; overridable for compact contexts.
+    property real pointSize: 44
     spacing: 8
 
     Text {
@@ -13,7 +15,7 @@ Row {
         color: root.accentColor
         font.family: Theme.fontMono
         font.weight: Font.Bold
-        font.pointSize: 44
+        font.pointSize: root.pointSize
     }
     Text {
         text: "MHz"

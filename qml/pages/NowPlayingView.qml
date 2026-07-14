@@ -10,8 +10,14 @@ Item {
     id: root
     signal settingsRequested()
     signal equalizerRequested()
+    signal minimalModeRequested()
 
-    readonly property bool pageActive: Controls.StackView.status === Controls.StackView.Active
+    // Set by Main.qml while the window is in minimal mode. Folded into
+    // pageActive so every keyboard shortcut below (all of which gate on
+    // pageActive, directly or via navGuard) goes dormant while minimal.
+    property bool minimalMode: false
+
+    readonly property bool pageActive: Controls.StackView.status === Controls.StackView.Active && !minimalMode
     readonly property bool typing: Window.activeFocusItem instanceof TextInput
     readonly property bool navGuard: pageActive && !typing && radio.ready && !radio.scanning && !recorder.recording
     readonly property bool presetSelected: presetList.currentIndex >= 0 && presetList.currentIndex < configStore.presetCount
@@ -84,6 +90,7 @@ Item {
     Shortcut { sequence: "T"; enabled: root.navGuard; onActivated: manualTuneDialog.open() }
     Shortcut { sequence: "O"; enabled: root.pageActive && !root.typing; onActivated: root.settingsRequested() }
     Shortcut { sequence: "Shift+E"; enabled: root.pageActive && !root.typing; onActivated: root.equalizerRequested() }
+    Shortcut { sequence: "Z"; enabled: root.pageActive && !root.typing; onActivated: root.minimalModeRequested() }
     Shortcut {
         sequence: "R"
         enabled: root.pageActive && !root.typing
@@ -178,6 +185,7 @@ Item {
 
                 Item { Layout.fillWidth: true }
 
+                IconButton { icon: "minimize"; tooltipText: "Minimal mode"; onClicked: root.minimalModeRequested() }
                 IconButton { icon: "eq"; tooltipText: "Equalizer"; onClicked: root.equalizerRequested() }
                 IconButton { icon: "settings"; tooltipText: "Settings"; onClicked: root.settingsRequested() }
                 IconButton { icon: "theme"; tooltipText: "Toggle theme"; onClicked: Theme.dark = !Theme.dark }

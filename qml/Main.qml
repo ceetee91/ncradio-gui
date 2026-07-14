@@ -1,4 +1,5 @@
 import QtQuick
+import QtCore
 import QtQuick.Controls as Controls
 import QtQuick.Effects
 import org.kde.kirigami as Kirigami
@@ -15,6 +16,40 @@ Kirigami.ApplicationWindow {
     minimumWidth: 1040
     minimumHeight: 540
     visible: true
+
+    // --- Minimal ("mini player") mode ---
+    property bool minimalMode: false
+    // Remembered across sessions (see Settings below); the on-top hint only
+    // actually applies while minimal — it's a mini-player control.
+    property bool alwaysOnTop: false
+    // Full-size dimensions to restore on leaving minimal mode.
+    property int savedWidth: width
+    property int savedHeight: height
+
+    flags: (minimalMode && alwaysOnTop) ? (Qt.Window | Qt.WindowStaysOnTopHint) : Qt.Window
+
+    Settings {
+        category: "MinimalMode"
+        property alias alwaysOnTop: root.alwaysOnTop
+    }
+
+    onMinimalModeChanged: {
+        if (minimalMode) {
+            savedWidth = width;
+            savedHeight = height;
+            // Lower the minimum BEFORE shrinking, or Qt clamps against it.
+            minimumWidth = 300;
+            minimumHeight = 190;
+            width = 340;
+            height = 220;
+        } else {
+            // Restore the minimum first; the saved size is always ≥ it.
+            minimumWidth = 1040;
+            minimumHeight = 540;
+            width = savedWidth;
+            height = savedHeight;
+        }
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -72,9 +107,12 @@ Kirigami.ApplicationWindow {
     Controls.StackView {
         id: stackView
         anchors.fill: parent
+        // Hidden in minimal mode; its NowPlayingView shortcuts also go dormant
+        // via that view's `minimalMode`-folded pageActive gate.
+        visible: !root.minimalMode
         // Disabled while any GlassDialog is open: see GlassDialog.qml for
         // why this is needed (Pointer Handlers don't respect Popup modality).
-        enabled: Theme.modalDepth === 0
+        enabled: Theme.modalDepth === 0 && !root.minimalMode
         initialItem: nowPlayingComponent
 
         popEnter: Transition {}
@@ -83,11 +121,30 @@ Kirigami.ApplicationWindow {
         pushExit: Transition {}
     }
 
+    // Only instantiated while minimal, so MinimalView's keyboard shortcuts
+    // exist only then and never collide with NowPlayingView's identical ones.
+    Loader {
+        anchors.fill: parent
+        z: 10
+        active: root.minimalMode
+        sourceComponent: minimalComponent
+    }
+
     Component {
         id: nowPlayingComponent
         NowPlayingView {
+            minimalMode: root.minimalMode
             onSettingsRequested: stackView.push(settingsComponent)
             onEqualizerRequested: stackView.push(equalizerComponent)
+            onMinimalModeRequested: root.minimalMode = true
+        }
+    }
+    Component {
+        id: minimalComponent
+        MinimalView {
+            alwaysOnTop: root.alwaysOnTop
+            onToggleAlwaysOnTop: root.alwaysOnTop = !root.alwaysOnTop
+            onExitRequested: root.minimalMode = false
         }
     }
     Component {

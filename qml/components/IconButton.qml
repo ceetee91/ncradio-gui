@@ -11,6 +11,9 @@ Item {
     property bool active: false
     property real size: 40
     property string tooltipText: ""
+    // Idle icon tint; override for higher contrast where textSecondary reads
+    // too dim against a surface (e.g. the minimal view's glass panel).
+    property color iconColor: Theme.textSecondary
     signal clicked()
 
     implicitWidth: size
@@ -31,7 +34,7 @@ Item {
         width: root.size * 0.46
         height: root.size * 0.46
         name: root.icon
-        color: root.active ? Theme.cyan : Theme.textSecondary
+        color: root.active ? Theme.cyan : root.iconColor
     }
 
     HoverHandler { id: hoverHandler; enabled: root.enabled }

@@ -27,6 +27,21 @@ on the left (search, add, edit, delete), and the tuner card on the right
 (signal meter, stereo/RDS status, frequency, transport controls, volume,
 and record).
 
+## Minimal mode
+
+<p align="center">
+  <img src="ncradio-gui-mini.png" width="340" alt="ncradio-gui minimal mode">
+</p>
+
+Press `Z` (or the minimize button next to the equalizer button) to collapse
+the window into a compact "mini player" that keeps just the essentials —
+frequency, RDS station/radiotext, signal + stereo status, and a mute/volume
+bar. It stays lightweight on purpose: it responds only to volume, mute, seek
+(`<`/`>`), step-tune (`,`/`.`), and previous/next-preset (`Up`/`Down`) keys,
+plus `Z` to return. The **pin** button toggles always-on-top (remembered
+across sessions), and the return button (or `Z` again) restores the previous
+window size. Full key list under [Keyboard shortcuts](#keyboard-shortcuts).
+
 ## Relation to ncradio
 
 [ncradio](https://github.com/ceetee91/ncradio) is the original ncurses/terminal FM radio controller.
@@ -55,8 +70,9 @@ engine wholesale** and puts a Qt/QML UI on top of it:
   (`backend/config.c`) — presets, EQ settings, and tuning options added in
   one are visible in the other. A handful of GUI-only settings that have
   no ncradio equivalent (recording destination folder, "skip filename
-  prompt", color theme selection and custom themes) live separately in Qt
-  `QSettings` (org `ceetee91`, app `ncradio-gui`).
+  prompt", color theme selection and custom themes, minimal-mode
+  always-on-top) live separately in Qt `QSettings` (org `ceetee91`, app
+  `ncradio-gui`).
 
 In short: ncradio is the engine and the reference behavior; ncradio-gui is
 a modern UI wrapped around the exact same tuning/audio/recording code.
@@ -247,6 +263,7 @@ group and a `CustomThemes` array), separate from the shared
 | `M` | Toggle mute |
 | `O` | Open Settings |
 | `Shift+E` | Open Equalizer |
+| `Z` | Enter minimal (mini-player) mode |
 | `Q` | Quit |
 
 Tuning/scan actions are disabled while a scan or a recording is active, and
@@ -268,6 +285,22 @@ whenever a text field (e.g. the preset search box) has focus.
 | `0` | Load the flat (no EQ) preset |
 | `S` | Save current bands as a new custom preset |
 | `Delete` | Delete the active preset (custom presets only) |
+
+### Minimal mode
+
+A compact "mini player" window (frequency, RDS, signal, and a mute/volume
+bar). Entered with `Z` or the minimize button beside the Equalizer button;
+the window shrinks and can be pinned always-on-top. Returning restores the
+previous window size.
+
+| Key | Action |
+|---|---|
+| `Z` | Return to Now Playing (restores the previous window size) |
+| `+` / `-` | Volume up / down |
+| `M` | Toggle mute |
+| `<` / `>` | Seek backward / forward to the next strong station |
+| `,` / `.` | Step down / up by the configured tuning step |
+| `Up` / `Down` | Tune to the previous / next preset |
 
 All dialogs close on `Escape` or on a click outside them. The ones with a
 text field (manual tune, preset rename/add, record filename) also confirm

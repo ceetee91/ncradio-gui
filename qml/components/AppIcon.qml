@@ -191,6 +191,31 @@ Canvas {
             ctx.lineTo(x + size * 0.86, y + size * 0.22);
             ctx.stroke();
             break;
+        case "minimize":
+        case "expand": {
+            // Two diagonal arrows on the TL↔BR diagonal. "expand" points them
+            // outward to the corners (maximise); "minimize" points them inward
+            // to the centre (compress). Each arrow = a shaft + a corner bracket
+            // arrowhead at one end.
+            const inw = name === "minimize";
+            const a = size * 0.14, b = size * 0.46, leg = size * 0.18;
+            const A = size - a, B = size - b;
+            // top-left arrow
+            line(a, a, b, b);
+            if (inw) { line(b, b, b - leg, b); line(b, b, b, b - leg); }
+            else     { line(a, a, a + leg, a); line(a, a, a, a + leg); }
+            // bottom-right arrow
+            line(A, A, B, B);
+            if (inw) { line(B, B, B + leg, B); line(B, B, B, B + leg); }
+            else     { line(A, A, A - leg, A); line(A, A, A, A - leg); }
+            break;
+        }
+        case "pin":
+            // Thumbtack: round head (ring + centre) with a needle to a point.
+            ring(cx - size * 0.18, y + size * 0.12, size * 0.36, sw * 0.9);
+            dot(cx - size * 0.06, y + size * 0.24, size * 0.12);
+            line(cx, y + size * 0.48, cx, y + size * 0.9);
+            break;
         default:
             ring(x, y, size);
         }
